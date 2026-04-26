@@ -2,12 +2,20 @@ onRecordAfterUpdateSuccess((e) => {
   const newStatus = e.record.getString('status')
   const oldStatus = e.record.original().getString('status')
 
-  let xpToAdd = 0
-  if (oldStatus !== 'learning' && newStatus === 'learning') xpToAdd = 50
-  if (oldStatus !== 'mastered' && newStatus === 'mastered') xpToAdd = 100
+  const xpMap = {
+    None: 0,
+    Learning: 25,
+    Familiar: 50,
+    Expert: 100,
+    'Mentor of Others': 200,
+  }
+
+  const oldXp = xpMap[oldStatus] || 0
+  const newXp = xpMap[newStatus] || 0
+  const xpToAdd = newXp - oldXp
 
   const userId = e.record.getString('user_id')
-  if (!userId) return e.next()
+  if (!userId || xpToAdd === 0) return e.next()
 
   const user = $app.findRecordById('users', userId)
 

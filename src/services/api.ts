@@ -19,7 +19,7 @@ export interface Topic extends RecordModel {
 export interface UserProgress extends RecordModel {
   user_id: string
   topic_id: string
-  status: 'unstarted' | 'learning' | 'mastered'
+  status: 'None' | 'Learning' | 'Familiar' | 'Expert' | 'Mentor of Others'
 }
 
 export const getDomains = () => pb.collection('domains').getFullList<Domain>({ sort: 'created' })

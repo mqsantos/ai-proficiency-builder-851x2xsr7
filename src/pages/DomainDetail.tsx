@@ -11,6 +11,7 @@ import {
 } from '@/services/api'
 import { getIcon } from '@/components/Icons'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -20,6 +21,8 @@ import {
   Share2,
   Layers,
   Cpu,
+  BookOpen,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -60,7 +63,7 @@ export default function DomainDetail() {
 
   useEffect(() => {
     loadData()
-  }, [slug])
+  }, [slug, user])
 
   useRealtime('user_progress', (e) => {
     if (e.record.user_id === user?.id) {
@@ -68,12 +71,14 @@ export default function DomainDetail() {
     }
   })
 
-  const handleToggleStatus = async (topicId: string, currentStatus: string = 'unstarted') => {
+  const handleToggleStatus = async (topicId: string, currentStatus: string = 'None') => {
     if (!user) return
     const nextStatus: Record<string, UserProgress['status']> = {
-      unstarted: 'learning',
-      learning: 'mastered',
-      mastered: 'unstarted',
+      None: 'Learning',
+      Learning: 'Familiar',
+      Familiar: 'Expert',
+      Expert: 'Mentor of Others',
+      'Mentor of Others': 'None',
     }
     const newStatus = nextStatus[currentStatus]
 
@@ -82,10 +87,11 @@ export default function DomainDetail() {
 
     try {
       await upsertProgress(user.id, topicId, newStatus)
-      if (newStatus === 'mastered')
-        toast.success('Skill mastered!', {
+      if (newStatus === 'Mentor of Others') {
+        toast.success('Incredible! You are now a Mentor!', {
           style: { background: domain?.color, color: '#fff', border: 'none' },
         })
+      }
     } catch (err) {
       // Revert
       setProgress((prev) => ({ ...prev, [topicId]: currentStatus as any }))
@@ -99,7 +105,7 @@ export default function DomainDetail() {
   }
 
   const handleShare = async (topicName: string) => {
-    const text = `I just mastered ${topicName} on the AI Proficiency Builder! 🚀`
+    const text = `I just reached "Mentor of Others" level in ${topicName} on the AI Proficiency Builder! 🚀`
     if (navigator.share) {
       try {
         await navigator.share({
@@ -121,54 +127,113 @@ export default function DomainDetail() {
   const techs = topics.filter((t) => t.type === 'tech')
 
   const getStatusIcon = (status?: string, color?: string) => {
-    if (status === 'mastered') return <CheckCircle2 className="h-5 w-5" style={{ color }} />
-    if (status === 'learning') return <Clock className="h-5 w-5 text-amber-500" />
-    return <Circle className="h-5 w-5 text-muted-foreground" />
+    switch (status) {
+      case 'Mentor of Others':
+        return <Sparkles className="h-5 w-5 text-purple-500 animate-pulse" />
+      case 'Expert':
+        return <CheckCircle2 className="h-5 w-5" style={{ color }} />
+      case 'Familiar':
+        return <BookOpen className="h-5 w-5 text-blue-500" />
+      case 'Learning':
+        return <Clock className="h-5 w-5 text-amber-500" />
+      case 'None':
+      default:
+        return <Circle className="h-5 w-5 text-muted-foreground" />
+    }
   }
 
-  const renderTopicCard = (topic: Topic) => (
-    <div
-      key={topic.id}
-      className={cn(
-        'glass-panel p-4 rounded-xl flex items-center justify-between transition-colors',
-        progress[topic.id] === 'mastered' ? 'bg-secondary/80 border-border/80' : '',
-      )}
-    >
-      <div>
-        <h4
-          className={cn(
-            'font-medium',
-            topic.type === 'tech' && 'font-mono text-sm',
-            progress[topic.id] === 'mastered' ? 'text-foreground' : 'text-foreground/90',
-          )}
-        >
-          {topic.name}
-        </h4>
-        <div className="flex items-center gap-3 mt-2">
-          <button
-            onClick={() => handleLearnMore(topic.name)}
-            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+  const getStatusBadge = (status: string = 'None', color?: string) => {
+    switch (status) {
+      case 'Mentor of Others':
+        return (
+          <Badge variant="default" className="bg-purple-500 hover:bg-purple-600">
+            Mentor
+          </Badge>
+        )
+      case 'Expert':
+        return (
+          <Badge variant="default" style={{ backgroundColor: color }}>
+            Expert
+          </Badge>
+        )
+      case 'Familiar':
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 shadow-none"
           >
-            <ExternalLink className="h-3 w-3" /> Learn More
-          </button>
-          {progress[topic.id] === 'mastered' && (
-            <button
-              onClick={() => handleShare(topic.name)}
-              className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1"
-            >
-              <Share2 className="h-3 w-3" /> Share Achievement
-            </button>
-          )}
-        </div>
-      </div>
-      <button
-        onClick={() => handleToggleStatus(topic.id, progress[topic.id])}
-        className="p-2 rounded-full hover:bg-secondary transition-colors shrink-0"
+            Familiar
+          </Badge>
+        )
+      case 'Learning':
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 shadow-none"
+          >
+            Learning
+          </Badge>
+        )
+      case 'None':
+      default:
+        return (
+          <Badge variant="outline" className="text-muted-foreground bg-background shadow-none">
+            None
+          </Badge>
+        )
+    }
+  }
+
+  const renderTopicCard = (topic: Topic) => {
+    const status = progress[topic.id] || 'None'
+    const isHighLevel = status === 'Expert' || status === 'Mentor of Others'
+    return (
+      <div
+        key={topic.id}
+        className={cn(
+          'glass-panel p-4 rounded-xl flex items-center justify-between transition-colors',
+          isHighLevel ? 'bg-secondary/80 border-border/80' : '',
+        )}
       >
-        {getStatusIcon(progress[topic.id], domain.color)}
-      </button>
-    </div>
-  )
+        <div>
+          <div className="flex items-center gap-2">
+            <h4
+              className={cn(
+                'font-medium',
+                topic.type === 'tech' && 'font-mono text-sm',
+                isHighLevel ? 'text-foreground' : 'text-foreground/90',
+              )}
+            >
+              {topic.name}
+            </h4>
+            {getStatusBadge(status, domain.color)}
+          </div>
+          <div className="flex items-center gap-3 mt-2">
+            <button
+              onClick={() => handleLearnMore(topic.name)}
+              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+            >
+              <ExternalLink className="h-3 w-3" /> Learn More
+            </button>
+            {status === 'Mentor of Others' && (
+              <button
+                onClick={() => handleShare(topic.name)}
+                className="text-xs text-purple-500 hover:text-purple-600 flex items-center gap-1"
+              >
+                <Share2 className="h-3 w-3" /> Share Achievement
+              </button>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => handleToggleStatus(topic.id, status)}
+          className="p-2 rounded-full hover:bg-secondary transition-colors shrink-0"
+        >
+          {getStatusIcon(status, domain.color)}
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-in">
@@ -196,7 +261,6 @@ export default function DomainDetail() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Skills Column */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Layers className="h-5 w-5 text-muted-foreground" /> Core Skills
@@ -204,7 +268,6 @@ export default function DomainDetail() {
           <div className="space-y-3">{skills.map(renderTopicCard)}</div>
         </div>
 
-        {/* Tech Column */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <Cpu className="h-5 w-5 text-muted-foreground" /> Technologies & Tools
