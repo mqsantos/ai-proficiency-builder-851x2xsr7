@@ -141,12 +141,20 @@ export function TopicItem({
           <div className="flex items-center gap-2">
             <h4
               className={cn(
-                'font-medium',
+                'font-medium flex items-center gap-2',
                 topic.type === 'tech' && 'font-mono text-sm',
                 isHighLevel ? 'text-foreground' : 'text-foreground/90',
               )}
             >
               {topic.name}
+              {topic.is_gap_suggestion && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] text-orange-400 border-orange-400/30"
+                >
+                  Gap
+                </Badge>
+              )}
             </h4>
             {getStatusBadge()}
           </div>

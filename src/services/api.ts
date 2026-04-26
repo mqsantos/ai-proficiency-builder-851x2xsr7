@@ -5,6 +5,8 @@ export interface Domain extends RecordModel {
   name: string
   slug: string
   description: string
+  level?: string
+  duration?: string
   icon: string
   color: string
 }
@@ -14,6 +16,25 @@ export interface Topic extends RecordModel {
   name: string
   description?: string
   type: 'skill' | 'tech'
+  is_gap_suggestion?: boolean
+}
+
+export interface Project extends RecordModel {
+  domain_id: string
+  title: string
+  description?: string
+  difficulty?: string
+}
+
+export interface UserProject extends RecordModel {
+  user_id: string
+  project_id: string
+  status: 'Not Started' | 'In Progress' | 'Completed'
+  repo_url?: string
+  demo_url?: string
+  expand?: {
+    project_id?: Project
+  }
 }
 
 export interface UserProgress extends RecordModel {
@@ -103,3 +124,30 @@ export const getMentors = () =>
     filter: 'is_available_to_mentor=true',
     expand: 'user_id,topic_id,topic_id.domain_id',
   })
+
+export const getProjectsByDomain = (domainId: string) =>
+  pb
+    .collection('projects')
+    .getFullList<Project>({ filter: `domain_id="${domainId}"`, sort: 'created' })
+
+export const getUserProjects = (userId: string) =>
+  pb
+    .collection('user_projects')
+    .getFullList<UserProject>({ filter: `user_id="${userId}"`, expand: 'project_id' })
+
+export const upsertUserProject = async (
+  userId: string,
+  projectId: string,
+  data: Partial<UserProject>,
+) => {
+  try {
+    const existing = await pb
+      .collection('user_projects')
+      .getFirstListItem<UserProject>(`user_id="${userId}" && project_id="${projectId}"`)
+    return pb.collection('user_projects').update<UserProject>(existing.id, data)
+  } catch (err) {
+    return pb
+      .collection('user_projects')
+      .create<UserProject>({ user_id: userId, project_id: projectId, ...data })
+  }
+}

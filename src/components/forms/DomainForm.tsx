@@ -19,6 +19,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Domain } from '@/services/api'
 import { useState } from 'react'
 
@@ -29,6 +36,8 @@ const schema = z.object({
     .min(2, 'Slug is required')
     .regex(/^[a-z0-9-]+$/, 'Lowercase and dashes only'),
   description: z.string().optional(),
+  level: z.enum(['Beginner', 'Intermediate', 'Advanced', 'Senior']).optional(),
+  duration: z.string().optional(),
   icon: z.string().optional(),
   color: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Must be a hex color'),
 })
@@ -49,6 +58,8 @@ export function DomainForm({ initialData, onSubmit, children }: Props) {
       name: initialData?.name || '',
       slug: initialData?.slug || '',
       description: initialData?.description || '',
+      level: (initialData?.level as any) || 'Beginner',
+      duration: initialData?.duration || '',
       icon: initialData?.icon || 'Layers',
       color: initialData?.color || '#3b82f6',
     },
@@ -108,6 +119,44 @@ export function DomainForm({ initialData, onSubmit, children }: Props) {
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Level</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Beginner">Beginner</SelectItem>
+                        <SelectItem value="Intermediate">Intermediate</SelectItem>
+                        <SelectItem value="Advanced">Advanced</SelectItem>
+                        <SelectItem value="Senior">Senior</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="duration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estimated Duration</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. 2-3 months" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

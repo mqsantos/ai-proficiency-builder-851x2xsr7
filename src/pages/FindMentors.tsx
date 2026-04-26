@@ -3,11 +3,13 @@ import { getMentors, UserProgress } from '@/services/api'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Users, ExternalLink } from 'lucide-react'
+import { Users, ExternalLink, Search } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
 export default function FindMentors() {
   const [mentors, setMentors] = useState<UserProgress[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     getMentors().then((m) => {
@@ -18,8 +20,17 @@ export default function FindMentors() {
 
   if (loading) return <div className="p-8 animate-pulse">Loading mentors...</div>
 
+  const filteredMentors = mentors.filter((m) => {
+    if (!search) return true
+    const topic = m.expand?.topic_id?.name?.toLowerCase() || ''
+    const domain = m.expand?.topic_id?.expand?.domain_id?.name?.toLowerCase() || ''
+    const user = m.expand?.user_id?.name?.toLowerCase() || ''
+    const s = search.toLowerCase()
+    return topic.includes(s) || domain.includes(s) || user.includes(s)
+  })
+
   // Group by topic
-  const byTopic = mentors.reduce(
+  const byTopic = filteredMentors.reduce(
     (acc, m) => {
       const topicId = m.topic_id
       if (!acc[topicId]) acc[topicId] = []
@@ -31,13 +42,24 @@ export default function FindMentors() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
-          <Users className="h-8 w-8 text-primary" /> Find Mentors
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Connect with experts who are available to guide you on specific topics.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
+            <Users className="h-8 w-8 text-primary" /> Find Mentors
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Connect with experts who are available to guide you on specific topics.
+          </p>
+        </div>
+        <div className="relative w-full md:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by topic, domain or name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       <div className="grid gap-6">
@@ -109,10 +131,8 @@ export default function FindMentors() {
           )
         })}
       </div>
-      {mentors.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No mentors available yet. Reach the "Mentor of Others" level and opt-in to appear here!
-        </div>
+      {filteredMentors.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground">No mentors match your search.</div>
       )}
     </div>
   )

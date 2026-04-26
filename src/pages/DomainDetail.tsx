@@ -9,14 +9,21 @@ import {
   createTopic,
   updateTopic,
   deleteTopic,
+  getProjectsByDomain,
+  getUserProjects,
+  upsertUserProject,
   Domain,
   Topic,
   UserProgress,
   Resource,
+  Project,
+  UserProject,
 } from '@/services/api'
 import { getIcon } from '@/components/Icons'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Layers, Cpu, Plus } from 'lucide-react'
+import { ArrowLeft, Layers, Cpu, Plus, Rocket, Clock } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { ProjectItem } from '@/components/ProjectItem'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
@@ -32,6 +39,8 @@ export default function DomainDetail() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [progress, setProgress] = useState<Record<string, UserProgress>>({})
   const [resources, setResources] = useState<Record<string, Resource[]>>({})
+  const [projects, setProjects] = useState<Project[]>([])
+  const [userProjects, setUserProjects] = useState<Record<string, UserProject>>({})
   const [loading, setLoading] = useState(true)
 
   const loadData = async () => {
@@ -40,14 +49,26 @@ export default function DomainDetail() {
       const d = await getDomainBySlug(slug)
       setDomain(d)
 
-      const [tData, pData] = await Promise.all([getTopicsByDomain(d.id), getUserProgress()])
+      const [tData, pData, projData] = await Promise.all([
+        getTopicsByDomain(d.id),
+        getUserProgress(),
+        getProjectsByDomain(d.id),
+      ])
       setTopics(tData)
+      setProjects(projData)
 
       const progMap: Record<string, UserProgress> = {}
       pData.forEach((p) => {
         if (p.user_id === user?.id) progMap[p.topic_id] = p
       })
       setProgress(progMap)
+
+      if (user) {
+        const uProjs = await getUserProjects(user.id)
+        const projMap: Record<string, UserProject> = {}
+        uProjs.forEach((up) => (projMap[up.project_id] = up))
+        setUserProjects(projMap)
+      }
 
       loadResources(tData)
     } catch (e) {
@@ -94,6 +115,20 @@ export default function DomainDetail() {
       }
     } catch (err) {
       toast.error('Failed to update progress')
+    }
+  }
+
+  const handleUpdateProject = async (projectId: string, data: any) => {
+    if (!user) return
+    try {
+      await upsertUserProject(user.id, projectId, data)
+      toast.success('Project updated')
+      const uProjs = await getUserProjects(user.id)
+      const projMap: Record<string, UserProject> = {}
+      uProjs.forEach((up) => (projMap[up.project_id] = up))
+      setUserProjects(projMap)
+    } catch (err) {
+      toast.error('Failed to update project')
     }
   }
 
@@ -170,9 +205,36 @@ export default function DomainDetail() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">{domain.name}</h1>
             <p className="text-muted-foreground mt-1">{domain.description}</p>
+            <div className="flex gap-3 mt-3">
+              {domain.level && <Badge variant="secondary">{domain.level}</Badge>}
+              {domain.duration && (
+                <Badge variant="outline" className="text-muted-foreground">
+                  <Clock className="w-3 h-3 mr-1" /> {domain.duration}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {projects.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <Rocket className="h-6 w-6 text-primary" /> Recommended Projects
+          </h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            {projects.map((p) => (
+              <ProjectItem
+                key={p.id}
+                project={p}
+                userProject={userProjects[p.id]}
+                domainColor={domain.color}
+                onUpdate={handleUpdateProject}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Topics</h2>

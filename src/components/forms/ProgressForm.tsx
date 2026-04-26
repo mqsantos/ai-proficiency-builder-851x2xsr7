@@ -102,37 +102,35 @@ export function ProgressForm({ initialData, topicName, onSubmit, children }: Pro
               )}
             />
 
-            {(statusValue === 'Expert' || statusValue === 'Mentor of Others') && (
-              <div className="space-y-4 border rounded-lg p-4 bg-muted/20 animate-fade-in-up">
-                <h4 className="font-medium text-sm">Proof of Mastery</h4>
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes & Experience</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Describe your experience..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="evidence_url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Evidence URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://github.com/..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
+            <div className="space-y-4 border rounded-lg p-4 bg-muted/20 animate-fade-in-up">
+              <h4 className="font-medium text-sm">Notes & Evidence</h4>
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes & Experience</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Describe your experience..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="evidence_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Evidence URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://github.com/..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {statusValue === 'Mentor of Others' && (
               <FormField

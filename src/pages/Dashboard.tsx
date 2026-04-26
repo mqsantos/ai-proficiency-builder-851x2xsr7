@@ -11,8 +11,20 @@ import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis } from 'recharts'
-import { Activity, Trophy, Zap, Sparkles, Plus, Edit2, Trash2 } from 'lucide-react'
+import {
+  Activity,
+  Trophy,
+  Zap,
+  Sparkles,
+  Plus,
+  Edit2,
+  Trash2,
+  ExternalLink,
+  Github,
+  Play,
+} from 'lucide-react'
 import { useRealtime } from '@/hooks/use-realtime'
+import { getUserProjects, UserProject, Project } from '@/services/api'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DomainForm } from '@/components/forms/DomainForm'
@@ -24,12 +36,20 @@ export default function Dashboard() {
   const [domains, setDomains] = useState<Domain[]>([])
   const [progress, setProgress] = useState<UserProgress[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
+  const [userProjects, setUserProjects] = useState<UserProject[]>([])
 
   const loadData = async () => {
-    const [d, p, t] = await Promise.all([getDomains(), getUserProgress(), getAllTopics()])
+    if (!user) return
+    const [d, p, t, uProjs] = await Promise.all([
+      getDomains(),
+      getUserProgress(),
+      getAllTopics(),
+      getUserProjects(user.id),
+    ])
     setDomains(d)
-    setProgress(p.filter((pr) => pr.user_id === user?.id))
+    setProgress(p.filter((pr) => pr.user_id === user.id))
     setTopics(t)
+    setUserProjects(uProjs)
   }
 
   useEffect(() => {
@@ -113,6 +133,11 @@ export default function Dashboard() {
   const totalExperts = progress.filter((p) => p.status === 'Expert').length
   const totalMentors = progress.filter((p) => p.status === 'Mentor of Others').length
 
+  const completedProjects = userProjects.filter(
+    (up) => up.status === 'Completed' && up.expand?.project_id,
+  )
+  const evidenceItems = progress.filter((p) => p.evidence_url && p.evidence_url.length > 0)
+
   return (
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -169,17 +194,30 @@ export default function Dashboard() {
 
           <Card className="glass-panel">
             <CardHeader>
-              <CardTitle>Manage Domains</CardTitle>
+              <CardTitle className="flex justify-between items-center">
+                <span>Manage Domains</span>
+                <Badge variant="outline">{domains.length} / 8 Phases</Badge>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {domains.map((d) => (
                 <div
                   key={d.id}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card flex-wrap gap-2"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-4 w-4 rounded-full" style={{ background: d.color }} />
-                    <span className="font-medium">{d.name}</span>
+                    <div
+                      className="h-4 w-4 rounded-full shrink-0"
+                      style={{ background: d.color }}
+                    />
+                    <span className="font-medium text-sm sm:text-base truncate max-w-[200px]">
+                      {d.name}
+                    </span>
+                    {d.level && (
+                      <Badge variant="secondary" className="text-[10px] hidden sm:inline-flex">
+                        {d.level}
+                      </Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <DomainForm initialData={d} onSubmit={(data) => handleUpdateDomain(d.id, data)}>
@@ -270,6 +308,84 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="glass-panel">
+          <CardHeader>
+            <CardTitle className="text-xl">Evidence Portfolio</CardTitle>
+            <CardDescription>Topics where you've added evidence of mastery.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {evidenceItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No evidence added yet.</p>
+            ) : (
+              evidenceItems.map((item) => {
+                const t = topics.find((topic) => topic.id === item.topic_id)
+                return (
+                  <div key={item.id} className="p-4 rounded-lg bg-secondary/30 border">
+                    <h5 className="font-semibold text-sm mb-1">{t?.name}</h5>
+                    {item.notes && (
+                      <p className="text-xs text-muted-foreground mb-3">{item.notes}</p>
+                    )}
+                    <a
+                      href={item.evidence_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center text-xs text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" /> View Evidence
+                    </a>
+                  </div>
+                )
+              })
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="glass-panel">
+          <CardHeader>
+            <CardTitle className="text-xl">Completed Projects</CardTitle>
+            <CardDescription>Recommended projects you've finished.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {completedProjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No projects completed yet.</p>
+            ) : (
+              completedProjects.map((item) => {
+                const p = item.expand?.project_id
+                if (!p) return null
+                return (
+                  <div key={item.id} className="p-4 rounded-lg bg-secondary/30 border">
+                    <h5 className="font-semibold text-sm mb-1">{p.title}</h5>
+                    <div className="flex gap-4 mt-2">
+                      {item.repo_url && (
+                        <a
+                          href={item.repo_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center text-xs hover:text-primary transition-colors"
+                        >
+                          <Github className="h-3 w-3 mr-1" /> Source Code
+                        </a>
+                      )}
+                      {item.demo_url && (
+                        <a
+                          href={item.demo_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center text-xs hover:text-primary transition-colors"
+                        >
+                          <Play className="h-3 w-3 mr-1" /> Live Demo
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

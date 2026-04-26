@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Topic } from '@/services/api'
 import { useState } from 'react'
 
@@ -33,6 +34,7 @@ const schema = z.object({
   name: z.string().min(2, 'Name is required'),
   type: z.enum(['skill', 'tech']),
   description: z.string().optional(),
+  is_gap_suggestion: z.boolean().default(false),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -51,6 +53,7 @@ export function TopicForm({ initialData, onSubmit, children }: Props) {
       name: initialData?.name || '',
       type: initialData?.type || 'skill',
       description: initialData?.description || '',
+      is_gap_suggestion: initialData?.is_gap_suggestion || false,
     },
   })
 
@@ -113,6 +116,20 @@ export function TopicForm({ initialData, onSubmit, children }: Props) {
                     <Textarea {...field} />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="is_gap_suggestion"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Is Gap Suggestion?</FormLabel>
+                  </div>
                 </FormItem>
               )}
             />
