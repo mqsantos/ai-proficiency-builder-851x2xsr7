@@ -10,6 +10,8 @@ import Login from './pages/Login'
 import Index from './pages/Index'
 import DomainDetail from './pages/DomainDetail'
 import Dashboard from './pages/Dashboard'
+import ResourceLibrary from './pages/ResourceLibrary'
+import FindMentors from './pages/FindMentors'
 import NotFound from './pages/NotFound'
 
 const App = () => (
@@ -25,6 +27,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/domain/:slug" element={<DomainDetail />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/resources" element={<ResourceLibrary />} />
+              <Route path="/mentors" element={<FindMentors />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

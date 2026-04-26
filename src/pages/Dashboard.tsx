@@ -11,9 +11,13 @@ import { useAuth } from '@/hooks/use-auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis } from 'recharts'
-import { Activity, Trophy, Zap, Sparkles } from 'lucide-react'
+import { Activity, Trophy, Zap, Sparkles, Plus, Edit2, Trash2 } from 'lucide-react'
 import { useRealtime } from '@/hooks/use-realtime'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { DomainForm } from '@/components/forms/DomainForm'
+import { createDomain, updateDomain, deleteDomain } from '@/services/api'
+import { toast } from 'sonner'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -32,9 +36,36 @@ export default function Dashboard() {
     loadData()
   }, [user])
 
-  useRealtime('user_progress', () => {
-    getUserProgress().then((p) => setProgress(p.filter((pr) => pr.user_id === user?.id)))
-  })
+  useRealtime('user_progress', () => loadData())
+  useRealtime('domains', () => loadData())
+
+  const handleCreateDomain = async (data: any) => {
+    try {
+      await createDomain(data)
+      toast.success('Domain created')
+    } catch (e) {
+      toast.error('Failed to create domain')
+    }
+  }
+
+  const handleUpdateDomain = async (id: string, data: any) => {
+    try {
+      await updateDomain(id, data)
+      toast.success('Domain updated')
+    } catch (e) {
+      toast.error('Failed to update domain')
+    }
+  }
+
+  const handleDeleteDomain = async (id: string) => {
+    if (!confirm('Delete domain and all related topics/resources?')) return
+    try {
+      await deleteDomain(id)
+      toast.success('Domain deleted')
+    } catch (e) {
+      toast.error('Failed to delete domain')
+    }
+  }
 
   const getScoreWeight = (status: string) => {
     switch (status) {
@@ -91,41 +122,85 @@ export default function Dashboard() {
             Track your AI mastery journey with granular details.
           </p>
         </div>
+        <DomainForm onSubmit={handleCreateDomain}>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" /> Add Domain
+          </Button>
+        </DomainForm>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card className="glass-panel col-span-1 md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" /> Proficiency Radar
-            </CardTitle>
-            <CardDescription>Your aggregated mastery score across domains</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[350px]">
-            {chartData.length > 0 && (
-              <ChartContainer
-                config={{ score: { label: 'Mastery %', color: 'hsl(var(--primary))' } }}
-                className="h-full w-full"
-              >
-                <RadarChart data={chartData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-                  <PolarGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.2} />
-                  <PolarAngleAxis
-                    dataKey="domain"
-                    tick={{ fill: 'hsl(var(--foreground))', fillOpacity: 0.7, fontSize: 12 }}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Radar
-                    name="Mastery"
-                    dataKey="score"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.4}
-                  />
-                </RadarChart>
-              </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
+        <div className="col-span-1 md:col-span-2 space-y-6">
+          <Card className="glass-panel">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" /> Proficiency Radar
+              </CardTitle>
+              <CardDescription>Your aggregated mastery score across domains</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[350px]">
+              {chartData.length > 0 && (
+                <ChartContainer
+                  config={{ score: { label: 'Mastery %', color: 'hsl(var(--primary))' } }}
+                  className="h-full w-full"
+                >
+                  <RadarChart
+                    data={chartData}
+                    margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
+                  >
+                    <PolarGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.2} />
+                    <PolarAngleAxis
+                      dataKey="domain"
+                      tick={{ fill: 'hsl(var(--foreground))', fillOpacity: 0.7, fontSize: 12 }}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Radar
+                      name="Mastery"
+                      dataKey="score"
+                      stroke="hsl(var(--primary))"
+                      fill="hsl(var(--primary))"
+                      fillOpacity={0.4}
+                    />
+                  </RadarChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="glass-panel">
+            <CardHeader>
+              <CardTitle>Manage Domains</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {domains.map((d) => (
+                <div
+                  key={d.id}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 w-4 rounded-full" style={{ background: d.color }} />
+                    <span className="font-medium">{d.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <DomainForm initialData={d} onSubmit={(data) => handleUpdateDomain(d.id, data)}>
+                      <Button size="icon" variant="ghost">
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    </DomainForm>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-red-500 hover:text-red-600"
+                      onClick={() => handleDeleteDomain(d.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">

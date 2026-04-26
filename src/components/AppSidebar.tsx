@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Network, LineChart, Library, Settings, LogOut, User } from 'lucide-react'
+import { Network, LineChart, Library, Users, LogOut, User } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -22,7 +22,8 @@ export function AppSidebar() {
   const navItems = [
     { title: 'Roadmap', url: '/', icon: Network },
     { title: 'Dashboard', url: '/dashboard', icon: LineChart },
-    { title: 'Resource Library', url: '#', icon: Library },
+    { title: 'Resource Library', url: '/resources', icon: Library },
+    { title: 'Find Mentors', url: '/mentors', icon: Users },
   ]
 
   return (

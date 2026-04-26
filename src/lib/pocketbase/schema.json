@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-26T13:49:00.566Z",
+  "generatedAt": "2026-04-26T14:04:18.697Z",
   "collections": [
     {
       "name": "users",
@@ -68,9 +68,9 @@
       "apiRules": {
         "list": "",
         "view": "",
-        "create": null,
-        "update": null,
-        "delete": null
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
       },
       "fields": [
         {
@@ -126,9 +126,9 @@
       "apiRules": {
         "list": "",
         "view": "",
-        "create": null,
-        "update": null,
-        "delete": null
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
       },
       "fields": [
         {
@@ -178,8 +178,8 @@
       "name": "user_progress",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && user_id = @request.auth.id",
-        "view": "@request.auth.id != '' && user_id = @request.auth.id",
+        "list": "@request.auth.id != '' && (user_id = @request.auth.id || is_available_to_mentor = true)",
+        "view": "@request.auth.id != '' && (user_id = @request.auth.id || is_available_to_mentor = true)",
         "create": "@request.auth.id != '' && user_id = @request.auth.id",
         "update": "@request.auth.id != '' && user_id = @request.auth.id",
         "delete": "@request.auth.id != '' && user_id = @request.auth.id"
@@ -219,11 +219,89 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "evidence_url",
+          "type": "url",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_available_to_mentor",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
         "CREATE UNIQUE INDEX idx_user_progress_user_topic ON user_progress (user_id, topic_id)"
       ]
+    },
+    {
+      "name": "resources",
+      "type": "base",
+      "apiRules": {
+        "list": "",
+        "view": "",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "topic_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "topics"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "url",
+          "type": "url",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["Video", "Article", "Course", "Documentation"]
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }
