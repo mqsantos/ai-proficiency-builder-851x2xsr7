@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-26T16:28:18.207Z",
+  "generatedAt": "2026-04-26T16:29:23.967Z",
   "collections": [
     {
       "name": "users",
@@ -29,19 +29,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "xp",
@@ -138,31 +133,21 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "level",
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "Beginner",
-            "Intermediate",
-            "Advanced",
-            "Senior"
-          ]
+          "selectValues": ["Beginner", "Intermediate", "Advanced", "Senior"]
         },
         {
           "name": "duration",
@@ -171,9 +156,7 @@
           "system": false
         }
       ],
-      "indexes": [
-        "CREATE UNIQUE INDEX idx_domains_slug ON domains (slug)"
-      ]
+      "indexes": ["CREATE UNIQUE INDEX idx_domains_slug ON domains (slug)"]
     },
     {
       "name": "topics",
@@ -210,29 +193,21 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "skill",
-            "tech"
-          ]
+          "selectValues": ["skill", "tech"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "is_gap_suggestion",
@@ -273,32 +248,21 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "None",
-            "Learning",
-            "Familiar",
-            "Expert",
-            "Mentor of Others"
-          ]
+          "selectValues": ["None", "Learning", "Familiar", "Expert", "Mentor of Others"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "notes",
@@ -358,12 +322,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "Video",
-            "Article",
-            "Course",
-            "Documentation"
-          ]
+          "selectValues": ["Video", "Article", "Course", "Documentation"]
         },
         {
           "name": "description",
@@ -376,19 +335,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": []
@@ -428,31 +382,21 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "Beginner",
-            "Intermediate",
-            "Advanced",
-            "Senior"
-          ]
+          "selectValues": ["Beginner", "Intermediate", "Advanced", "Senior"]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": []
@@ -487,11 +431,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "Not Started",
-            "In Progress",
-            "Completed"
-          ]
+          "selectValues": ["Not Started", "In Progress", "Completed"]
         },
         {
           "name": "repo_url",
@@ -510,19 +450,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [

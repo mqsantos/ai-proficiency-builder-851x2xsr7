@@ -23,6 +23,8 @@ import {
   Github,
   Play,
 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,19 +51,26 @@ export default function Dashboard() {
   const [progress, setProgress] = useState<UserProgress[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
   const [userProjects, setUserProjects] = useState<UserProject[]>([])
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   const loadData = async () => {
     if (!user) return
-    const [d, p, t, uProjs] = await Promise.all([
-      getDomains(),
-      getUserProgress(),
-      getAllTopics(),
-      getUserProjects(user.id),
-    ])
-    setDomains(d)
-    setProgress(p.filter((pr) => pr.user_id === user.id))
-    setTopics(t)
-    setUserProjects(uProjs)
+    setLoading(true)
+    try {
+      const [d, p, t, uProjs] = await Promise.all([
+        getDomains(),
+        getUserProgress(),
+        getAllTopics(),
+        getUserProjects(user.id),
+      ])
+      setDomains(d)
+      setProgress(p.filter((pr) => pr.user_id === user.id))
+      setTopics(t)
+      setUserProjects(uProjs)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -125,11 +134,43 @@ export default function Dashboard() {
 
       return {
         domain: d.name.replace(' & ', '\n'), // break long names
+        slug: d.slug,
         score: totalMaxScore > 0 ? Math.round((currentScore / totalMaxScore) * 100) : 0,
         fullMark: 100,
       }
     })
   }, [domains, progress, topics])
+
+  const hasProgress = progress.some((p) => getScoreWeight(p.status) > 0)
+
+  const CustomTick = (props: any) => {
+    const { payload, x, y, textAnchor } = props
+    const dataItem = chartData.find((d) => d.domain === payload.value)
+
+    return (
+      <g
+        className="cursor-pointer"
+        onClick={() => dataItem?.slug && navigate(`/domain/${dataItem.slug}`)}
+      >
+        <text
+          x={x}
+          y={y}
+          dy={16}
+          textAnchor={textAnchor}
+          fill="hsl(var(--foreground))"
+          fillOpacity={0.7}
+          fontSize={12}
+          className="hover:fill-primary hover:font-bold transition-all duration-200"
+        >
+          {payload.value.split('\n').map((line: string, index: number) => (
+            <tspan x={x} dy={index === 0 ? 0 : 14} key={index}>
+              {line}
+            </tspan>
+          ))}
+        </text>
+      </g>
+    )
+  }
 
   const highLevelProgress = progress
     .filter((p) => p.status === 'Expert' || p.status === 'Mentor of Others')
@@ -175,7 +216,22 @@ export default function Dashboard() {
               <CardDescription>Your aggregated mastery score across domains</CardDescription>
             </CardHeader>
             <CardContent className="h-[350px]">
-              {chartData.length > 0 && (
+              {loading ? (
+                <div className="h-full w-full flex items-center justify-center p-8">
+                  <Skeleton className="h-[250px] w-[250px] rounded-full opacity-20" />
+                </div>
+              ) : !hasProgress ? (
+                <div className="h-full w-full flex flex-col items-center justify-center text-center p-6 space-y-4">
+                  <Activity className="h-12 w-12 text-muted-foreground opacity-20" />
+                  <p className="text-muted-foreground max-w-sm text-sm">
+                    No progress data yet. Start tracking your skills in the Domains section to see
+                    your proficiency radar!
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link to="/">Browse Domains</Link>
+                  </Button>
+                </div>
+              ) : chartData.length > 0 ? (
                 <ChartContainer
                   config={{ score: { label: 'Mastery %', color: 'hsl(var(--primary))' } }}
                   className="h-full w-full"
@@ -185,10 +241,7 @@ export default function Dashboard() {
                     margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
                   >
                     <PolarGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.2} />
-                    <PolarAngleAxis
-                      dataKey="domain"
-                      tick={{ fill: 'hsl(var(--foreground))', fillOpacity: 0.7, fontSize: 12 }}
-                    />
+                    <PolarAngleAxis dataKey="domain" tick={<CustomTick />} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Radar
                       name="Mastery"
@@ -196,10 +249,11 @@ export default function Dashboard() {
                       stroke="hsl(var(--primary))"
                       fill="hsl(var(--primary))"
                       fillOpacity={0.4}
+                      className="cursor-pointer hover:fill-primary/60 transition-all duration-300"
                     />
                   </RadarChart>
                 </ChartContainer>
-              )}
+              ) : null}
             </CardContent>
           </Card>
 
