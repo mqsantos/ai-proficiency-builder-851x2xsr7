@@ -7,6 +7,8 @@ import {
   upsertProgress,
   getResourcesByTopic,
   createTopic,
+  updateDomain,
+  deleteDomain,
   updateTopic,
   deleteTopic,
   getProjectsByDomain,
@@ -21,7 +23,19 @@ import {
 } from '@/services/api'
 import { getIcon } from '@/components/Icons'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Layers, Cpu, Plus, Rocket, Clock } from 'lucide-react'
+import { ArrowLeft, Layers, Cpu, Plus, Rocket, Clock, Edit2, Trash2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { Badge } from '@/components/ui/badge'
 import { ProjectItem } from '@/components/ProjectItem'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -159,8 +173,29 @@ export default function DomainDetail() {
       await deleteTopic(id)
       toast.success('Topic deleted')
       loadData()
-    } catch (e) {
-      toast.error('Failed to delete topic')
+    } catch (e: any) {
+      toast.error(`Failed to delete topic: ${getErrorMessage(e)}`)
+    }
+  }
+
+  const handleUpdateDomain = async (id: string, data: any) => {
+    try {
+      await updateDomain(id, data)
+      toast.success('Domain updated')
+      loadData()
+    } catch (e: any) {
+      toast.error(`Failed to update domain: ${getErrorMessage(e)}`)
+    }
+  }
+
+  const handleDeleteDomain = async () => {
+    if (!domain) return
+    try {
+      await deleteDomain(domain.id)
+      toast.success('Domain deleted')
+      navigate('/dashboard')
+    } catch (e: any) {
+      toast.error(`Failed to delete domain: ${getErrorMessage(e)}`)
     }
   }
 
@@ -195,9 +230,42 @@ export default function DomainDetail() {
       </Button>
 
       <div
-        className="glass-panel rounded-2xl p-8 mb-10 border-t-4"
+        className="glass-panel rounded-2xl p-8 mb-10 border-t-4 relative group"
         style={{ borderTopColor: domain.color }}
       >
+        <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <DomainForm initialData={domain} onSubmit={(data) => handleUpdateDomain(domain.id, data)}>
+            <Button size="icon" variant="ghost">
+              <Edit2 className="h-4 w-4" />
+            </Button>
+          </DomainForm>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the domain and all
+                  associated topics, projects, and progress.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteDomain}
+                  className="bg-red-500 hover:text-white hover:bg-red-600"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
         <div className="flex items-center gap-4 mb-4">
           <div className="p-3 rounded-xl bg-secondary" style={{ color: domain.color }}>
             {getIcon(domain.icon, { className: 'h-8 w-8' })}

@@ -23,6 +23,18 @@ import {
   Github,
   Play,
 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { useRealtime } from '@/hooks/use-realtime'
 import { getUserProjects, UserProject, Project } from '@/services/api'
 import { Badge } from '@/components/ui/badge'
@@ -78,12 +90,11 @@ export default function Dashboard() {
   }
 
   const handleDeleteDomain = async (id: string) => {
-    if (!confirm('Delete domain and all related topics/resources?')) return
     try {
       await deleteDomain(id)
       toast.success('Domain deleted')
-    } catch (e) {
-      toast.error('Failed to delete domain')
+    } catch (e: any) {
+      toast.error(`Failed to delete domain: ${getErrorMessage(e)}`)
     }
   }
 
@@ -225,14 +236,35 @@ export default function Dashboard() {
                         <Edit2 className="h-4 w-4" />
                       </Button>
                     </DomainForm>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="text-red-500 hover:text-red-600"
-                      onClick={() => handleDeleteDomain(d.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the domain
+                            and all associated topics, projects, and progress.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteDomain(d.id)}
+                            className="bg-red-500 hover:text-white hover:bg-red-600"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))}
