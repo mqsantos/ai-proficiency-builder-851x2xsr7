@@ -13,6 +13,13 @@ import { TopicForm } from '@/components/forms/TopicForm'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   ExternalLink,
   Trash2,
   Edit2,
@@ -179,15 +186,37 @@ export function TopicItem({
             </button>
           </div>
         </div>
-        <ProgressForm
-          initialData={progressRecord || { status: 'None' }}
-          topicName={topic.name}
-          onSubmit={onUpdateProgress}
-        >
-          <button className="p-2 rounded-full hover:bg-secondary transition-colors shrink-0">
-            {getStatusIcon()}
-          </button>
-        </ProgressForm>
+        <div className="flex items-center gap-2 shrink-0">
+          <Select
+            value={status}
+            onValueChange={(val) => onUpdateProgress({ ...(progressRecord || {}), status: val })}
+          >
+            <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectValue placeholder="Set Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="None">None</SelectItem>
+              <SelectItem value="Learning">Learning</SelectItem>
+              <SelectItem value="Familiar">Familiar</SelectItem>
+              <SelectItem value="Expert">Expert</SelectItem>
+              <SelectItem value="Mentor of Others">Mentor of Others</SelectItem>
+            </SelectContent>
+          </Select>
+          <ProgressForm
+            initialData={progressRecord || { status: 'None' }}
+            topicName={topic.name}
+            onSubmit={onUpdateProgress}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-secondary shrink-0"
+              title="Notes & Evidence"
+            >
+              {getStatusIcon()}
+            </Button>
+          </ProgressForm>
+        </div>
       </div>
 
       {expanded && (
