@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-04-26T15:41:35.466Z",
+  "generatedAt": "2026-04-26T16:21:46.242Z",
   "collections": [
     {
       "name": "users",
       "type": "auth",
       "apiRules": {
-        "list": "id = @request.auth.id",
-        "view": "id = @request.auth.id",
+        "list": "id = @request.auth.id || is_public = true",
+        "view": "id = @request.auth.id || is_public = true",
         "create": "",
         "update": "id = @request.auth.id",
         "delete": "id = @request.auth.id"
@@ -67,11 +67,24 @@
           "type": "text",
           "required": false,
           "system": false
+        },
+        {
+          "name": "is_public",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
         "CREATE UNIQUE INDEX `idx_tokenKey__pb_users_auth_` ON `users` (`tokenKey`)",
-        "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''"
+        "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''",
+        "CREATE UNIQUE INDEX `idx_users_slug` ON `users` (slug) WHERE slug != ''"
       ]
     },
     {
@@ -209,8 +222,8 @@
       "name": "user_progress",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (user_id = @request.auth.id || is_available_to_mentor = true)",
-        "view": "@request.auth.id != '' && (user_id = @request.auth.id || is_available_to_mentor = true)",
+        "list": "user_id = @request.auth.id || is_available_to_mentor = true || user_id.is_public = true",
+        "view": "user_id = @request.auth.id || is_available_to_mentor = true || user_id.is_public = true",
         "create": "@request.auth.id != '' && user_id = @request.auth.id",
         "update": "@request.auth.id != '' && user_id = @request.auth.id",
         "delete": "@request.auth.id != '' && user_id = @request.auth.id"
@@ -392,8 +405,8 @@
       "name": "user_projects",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
+        "list": "user_id = @request.auth.id || user_id.is_public = true",
+        "view": "user_id = @request.auth.id || user_id.is_public = true",
         "create": "@request.auth.id != '' && user_id = @request.auth.id",
         "update": "@request.auth.id != '' && user_id = @request.auth.id",
         "delete": "@request.auth.id != '' && user_id = @request.auth.id"

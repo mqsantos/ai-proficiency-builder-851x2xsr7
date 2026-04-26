@@ -26,6 +26,10 @@ const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   headline: z.string().max(100).optional(),
   bio: z.string().max(500).optional(),
+  slug: z
+    .string()
+    .regex(/^[a-zA-Z0-9_-]*$/, 'Only letters, numbers, hyphens, and underscores allowed')
+    .optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -44,6 +48,7 @@ export function ProfileForm({ user, onSubmit, children }: Props) {
       name: user.name || '',
       headline: user.headline || '',
       bio: user.bio || '',
+      slug: user.slug || '',
     },
   })
 
@@ -95,6 +100,19 @@ export function ProfileForm({ user, onSubmit, children }: Props) {
                   <FormLabel>Bio</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Tell us about yourself..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Public URL Slug</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. your-name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

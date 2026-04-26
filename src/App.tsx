@@ -13,6 +13,7 @@ import Dashboard from './pages/Dashboard'
 import ResourceLibrary from './pages/ResourceLibrary'
 import FindMentors from './pages/FindMentors'
 import Profile from './pages/Profile'
+import PublicProfile from './pages/PublicProfile'
 import NotFound from './pages/NotFound'
 
 const App = () => (
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/resources" element={<ResourceLibrary />} />
               <Route path="/mentors" element={<FindMentors />} />
             </Route>
+            <Route path="/p/:slug" element={<PublicProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>

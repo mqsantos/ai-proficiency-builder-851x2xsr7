@@ -27,6 +27,8 @@ export interface User extends RecordModel {
   last_activity_at?: string
   bio?: string
   headline?: string
+  is_public?: boolean
+  slug?: string
 }
 
 export interface Project extends RecordModel {
@@ -155,6 +157,9 @@ export const getUserProjects = (userId: string) =>
 
 export const updateUserProfile = (id: string, data: Partial<User>) =>
   pb.collection('users').update<User>(id, data)
+
+export const getUserBySlug = (slug: string) =>
+  pb.collection('users').getFirstListItem<User>(`slug="${slug}" && is_public=true`)
 
 export const deleteUserProgress = (id: string) => pb.collection('user_progress').delete(id)
 export const deleteUserProject = (id: string) => pb.collection('user_projects').delete(id)

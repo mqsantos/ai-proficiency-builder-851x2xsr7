@@ -31,13 +31,34 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
 import { ProfileForm } from '@/components/forms/ProfileForm'
 import { AddPortfolioProjectForm } from '@/components/forms/AddPortfolioProjectForm'
 import { ProgressForm } from '@/components/forms/ProgressForm'
 import { UserProjectForm } from '@/components/forms/UserProjectForm'
-import { User as UserIcon, Flame, Star, Code2, Trash2, Github, Play } from 'lucide-react'
+import {
+  User as UserIcon,
+  Flame,
+  Star,
+  Code2,
+  Trash2,
+  Github,
+  Play,
+  Globe,
+  Copy,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+} from 'recharts'
+import { ChartContainer } from '@/components/ui/chart'
 
 export default function ProfilePage() {
   const { user } = useAuth()
@@ -114,6 +135,22 @@ export default function ProfilePage() {
     }
   }
 
+  const handleTogglePublic = async (checked: boolean) => {
+    let payload: Partial<User> = { is_public: checked }
+    if (checked && !profile.slug) {
+      payload.slug =
+        (profile.name || 'user').toLowerCase().replace(/[^a-z0-9]/g, '') +
+        '-' +
+        Math.floor(Math.random() * 1000)
+    }
+    try {
+      await updateUserProfile(profile.id, payload)
+      toast.success(checked ? 'Profile is now public' : 'Profile is now private')
+    } catch (e) {
+      toast.error('Failed to update profile visibility')
+    }
+  }
+
   const handleAddProject = async (data: any) => {
     try {
       const { project_id, ...rest } = data
@@ -170,6 +207,27 @@ export default function ProfilePage() {
 
   const unaddedProjects = projects.filter((p) => !userProjects.some((up) => up.project_id === p.id))
 
+  const radarData = domains.map((d) => {
+    const domainTopics = topics.filter((t) => t.domain_id === d.id)
+    const userDomainProgress = progresses.filter((p) =>
+      domainTopics.some((t) => t.id === p.topic_id),
+    )
+    const scoreMap: Record<string, number> = {
+      None: 0,
+      Learning: 1,
+      Familiar: 2,
+      Expert: 3,
+      'Mentor of Others': 4,
+    }
+    let totalScore = 0
+    userDomainProgress.forEach((p) => {
+      totalScore += scoreMap[p.status] || 0
+    })
+    const maxPossible = domainTopics.length > 0 ? domainTopics.length * 4 : 1
+    const percentage = Math.round((totalScore / maxPossible) * 100)
+    return { domain: d.name, score: percentage, fullMark: 100 }
+  })
+
   return (
     <div className="container max-w-6xl py-8 space-y-8 animate-fade-in">
       <Card className="border-white/10 bg-slate-950/50 backdrop-blur-xl overflow-hidden relative">
@@ -180,7 +238,7 @@ export default function ProfilePage() {
               <AvatarImage
                 src={
                   profile.avatar ||
-                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`
+                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email || profile.id}`
                 }
               />
               <AvatarFallback className="rounded-xl bg-primary/20">
@@ -213,283 +271,354 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="skills" className="w-full">
-        <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent h-auto p-0 space-x-6">
-          <TabsTrigger
-            value="skills"
-            className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-3 pt-2"
-          >
-            Skills & Tech
-          </TabsTrigger>
-          <TabsTrigger
-            value="portfolio"
-            className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-3 pt-2"
-          >
-            Portfolio
-          </TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="border-white/10 bg-slate-950/50 backdrop-blur-sm overflow-hidden">
+            <CardHeader>
+              <CardTitle className="text-lg">Proficiency Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-[250px] w-full" config={{}}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart
+                    data={radarData}
+                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                  >
+                    <PolarGrid stroke="rgba(255,255,255,0.2)" />
+                    <PolarAngleAxis
+                      dataKey="domain"
+                      tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 10 }}
+                    />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <Radar
+                      name="Proficiency"
+                      dataKey="score"
+                      stroke="hsl(var(--primary))"
+                      fill="hsl(var(--primary))"
+                      fillOpacity={0.5}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: '#0f172a',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                      }}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-        <TabsContent value="skills" className="mt-6 space-y-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-end sm:items-center justify-between">
-            <div className="flex gap-4 w-full sm:w-auto">
-              <div className="w-full sm:w-48">
-                <Select value={domainFilter} onValueChange={setDomainFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Domains" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Domains</SelectItem>
-                    {domains.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <Card className="border-white/10 bg-slate-950/50 backdrop-blur-sm">
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <h3 className="font-medium flex items-center gap-2 text-sm">
+                    <Globe className="w-4 h-4 text-primary" />
+                    Public Profile
+                  </h3>
+                  <p className="text-xs text-muted-foreground">Share your profile via link.</p>
+                </div>
+                <Switch checked={profile.is_public || false} onCheckedChange={handleTogglePublic} />
               </div>
-              <div className="w-full sm:w-48">
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="skill">Skills</SelectItem>
-                    <SelectItem value="tech">Technologies</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+              {profile.is_public && profile.slug && (
+                <div className="pt-2 border-t border-white/10">
+                  <Button
+                    variant="outline"
+                    className="w-full text-xs"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/p/${profile.slug}`)
+                      toast.success('Public link copied to clipboard')
+                    }}
+                  >
+                    <Copy className="w-4 h-4 mr-2" /> Copy Link
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-          {filteredTopics.length === 0 ? (
-            <div className="text-center py-12 border border-white/10 border-dashed rounded-xl bg-white/5">
-              <Code2 className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium">No skills found</h3>
-              <p className="text-muted-foreground text-sm mt-1">Try adjusting your filters.</p>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {domains
-                .filter((d) => domainFilter === 'all' || d.id === domainFilter)
-                .map((domain) => {
-                  const domainTopics = filteredTopics.filter((t) => t.domain_id === domain.id)
-                  if (domainTopics.length === 0) return null
-                  return (
-                    <div key={domain.id} className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: domain.color }}
-                        />
-                        {domain.name}
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {domainTopics.map((topic) => {
-                          const progress = progresses.find((p) => p.topic_id === topic.id)
-                          return (
-                            <Card
-                              key={topic.id}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="skills" className="w-full">
+            <TabsList className="w-full justify-start border-b border-white/10 rounded-none bg-transparent h-auto p-0 space-x-6">
+              <TabsTrigger
+                value="skills"
+                className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-3 pt-2"
+              >
+                Skills & Tech
+              </TabsTrigger>
+              <TabsTrigger
+                value="portfolio"
+                className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-3 pt-2"
+              >
+                Portfolio
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="skills" className="mt-6 space-y-6">
+              <div className="flex flex-col sm:flex-row gap-4 items-end sm:items-center justify-between">
+                <div className="flex gap-4 w-full sm:w-auto">
+                  <div className="w-full sm:w-48">
+                    <Select value={domainFilter} onValueChange={setDomainFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Domains" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Domains</SelectItem>
+                        {domains.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>
+                            {d.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-full sm:w-48">
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="skill">Skills</SelectItem>
+                        <SelectItem value="tech">Technologies</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {filteredTopics.length === 0 ? (
+                <div className="text-center py-12 border border-white/10 border-dashed rounded-xl bg-white/5">
+                  <Code2 className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium">No skills found</h3>
+                  <p className="text-muted-foreground text-sm mt-1">Try adjusting your filters.</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {domains
+                    .filter((d) => domainFilter === 'all' || d.id === domainFilter)
+                    .map((domain) => {
+                      const domainTopics = filteredTopics.filter((t) => t.domain_id === domain.id)
+                      if (domainTopics.length === 0) return null
+                      return (
+                        <div key={domain.id} className="space-y-4">
+                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: domain.color }}
+                            />
+                            {domain.name}
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {domainTopics.map((topic) => {
+                              const progress = progresses.find((p) => p.topic_id === topic.id)
+                              return (
+                                <Card
+                                  key={topic.id}
+                                  className={cn(
+                                    'border-white/10 bg-slate-950/50 backdrop-blur-sm overflow-hidden',
+                                    progress ? 'border-primary/30' : '',
+                                  )}
+                                >
+                                  <CardHeader className="pb-3 px-4 pt-4">
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px] uppercase tracking-wider mb-1"
+                                        >
+                                          {topic.type}
+                                        </Badge>
+                                        <CardTitle className="text-base">{topic.name}</CardTitle>
+                                      </div>
+                                      {progress ? (
+                                        <Badge
+                                          className={cn(
+                                            progress.status === 'Expert' ||
+                                              progress.status === 'Mentor of Others'
+                                              ? 'bg-primary text-primary-foreground'
+                                              : 'bg-secondary',
+                                          )}
+                                        >
+                                          {progress.status}
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" className="text-muted-foreground">
+                                          Not Started
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent className="px-4 pb-4 pt-0">
+                                    <div className="flex gap-2 justify-end mt-4">
+                                      {progress ? (
+                                        <>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs h-8 text-red-400 hover:text-red-500 hover:bg-red-500/10"
+                                            onClick={() => handleResetProgress(progress.id)}
+                                          >
+                                            Reset
+                                          </Button>
+                                          <ProgressForm
+                                            initialData={progress}
+                                            topicName={topic.name}
+                                            onSubmit={(d) => handleUpdateProgress(topic.id, d)}
+                                          >
+                                            <Button
+                                              variant="secondary"
+                                              size="sm"
+                                              className="text-xs h-8"
+                                            >
+                                              Update
+                                            </Button>
+                                          </ProgressForm>
+                                        </>
+                                      ) : (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-xs h-8 border-primary/50 hover:bg-primary/10"
+                                          onClick={() =>
+                                            handleUpdateProgress(topic.id, { status: 'Learning' })
+                                          }
+                                        >
+                                          Start Learning
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="portfolio" className="mt-6 space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">My Projects</h2>
+                <AddPortfolioProjectForm projects={unaddedProjects} onSubmit={handleAddProject}>
+                  <Button disabled={unaddedProjects.length === 0}>Add Project to Portfolio</Button>
+                </AddPortfolioProjectForm>
+              </div>
+
+              {userProjects.length === 0 ? (
+                <div className="text-center py-12 border border-white/10 border-dashed rounded-xl bg-white/5">
+                  <Github className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium">Portfolio is empty</h3>
+                  <p className="text-muted-foreground text-sm mt-1 mb-4">
+                    Add your first project to start tracking your work.
+                  </p>
+                  <AddPortfolioProjectForm projects={unaddedProjects} onSubmit={handleAddProject}>
+                    <Button variant="outline" disabled={unaddedProjects.length === 0}>
+                      Add Project
+                    </Button>
+                  </AddPortfolioProjectForm>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {userProjects.map((up) => {
+                    const project = up.expand?.project_id as unknown as Project
+                    if (!project) return null
+                    const domain = project.expand?.domain_id as unknown as Domain
+
+                    return (
+                      <Card
+                        key={up.id}
+                        className="border-white/10 bg-slate-950/50 backdrop-blur-sm flex flex-col"
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p
+                                className="text-xs text-muted-foreground mb-1"
+                                style={{ color: domain?.color }}
+                              >
+                                {domain?.name}
+                              </p>
+                              <CardTitle className="text-lg">{project.title}</CardTitle>
+                            </div>
+                            <Badge
+                              variant="outline"
                               className={cn(
-                                'border-white/10 bg-slate-950/50 backdrop-blur-sm overflow-hidden',
-                                progress ? 'border-primary/30' : '',
+                                up.status === 'Completed'
+                                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                  : up.status === 'In Progress'
+                                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                    : '',
                               )}
                             >
-                              <CardHeader className="pb-3 px-4 pt-4">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <Badge
-                                      variant="outline"
-                                      className="text-[10px] uppercase tracking-wider mb-1"
-                                    >
-                                      {topic.type}
-                                    </Badge>
-                                    <CardTitle className="text-base">{topic.name}</CardTitle>
-                                  </div>
-                                  {progress ? (
-                                    <Badge
-                                      className={cn(
-                                        progress.status === 'Expert' ||
-                                          progress.status === 'Mentor of Others'
-                                          ? 'bg-primary text-primary-foreground'
-                                          : 'bg-secondary',
-                                      )}
-                                    >
-                                      {progress.status}
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="outline" className="text-muted-foreground">
-                                      Not Started
-                                    </Badge>
-                                  )}
-                                </div>
-                              </CardHeader>
-                              <CardContent className="px-4 pb-4 pt-0">
-                                <div className="flex gap-2 justify-end mt-4">
-                                  {progress ? (
-                                    <>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-xs h-8 text-red-400 hover:text-red-500 hover:bg-red-500/10"
-                                        onClick={() => handleResetProgress(progress.id)}
-                                      >
-                                        Reset
-                                      </Button>
-                                      <ProgressForm
-                                        initialData={progress}
-                                        topicName={topic.name}
-                                        onSubmit={(d) => handleUpdateProgress(topic.id, d)}
-                                      >
-                                        <Button
-                                          variant="secondary"
-                                          size="sm"
-                                          className="text-xs h-8"
-                                        >
-                                          Update
-                                        </Button>
-                                      </ProgressForm>
-                                    </>
-                                  ) : (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="text-xs h-8 border-primary/50 hover:bg-primary/10"
-                                      onClick={() =>
-                                        handleUpdateProgress(topic.id, { status: 'Learning' })
-                                      }
-                                    >
-                                      Start Learning
-                                    </Button>
-                                  )}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="portfolio" className="mt-6 space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">My Projects</h2>
-            <AddPortfolioProjectForm projects={unaddedProjects} onSubmit={handleAddProject}>
-              <Button disabled={unaddedProjects.length === 0}>Add Project to Portfolio</Button>
-            </AddPortfolioProjectForm>
-          </div>
-
-          {userProjects.length === 0 ? (
-            <div className="text-center py-12 border border-white/10 border-dashed rounded-xl bg-white/5">
-              <Github className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium">Portfolio is empty</h3>
-              <p className="text-muted-foreground text-sm mt-1 mb-4">
-                Add your first project to start tracking your work.
-              </p>
-              <AddPortfolioProjectForm projects={unaddedProjects} onSubmit={handleAddProject}>
-                <Button variant="outline" disabled={unaddedProjects.length === 0}>
-                  Add Project
-                </Button>
-              </AddPortfolioProjectForm>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {userProjects.map((up) => {
-                const project = up.expand?.project_id as unknown as Project
-                if (!project) return null
-                const domain = project.expand?.domain_id as unknown as Domain
-
-                return (
-                  <Card
-                    key={up.id}
-                    className="border-white/10 bg-slate-950/50 backdrop-blur-sm flex flex-col"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p
-                            className="text-xs text-muted-foreground mb-1"
-                            style={{ color: domain?.color }}
-                          >
-                            {domain?.name}
-                          </p>
-                          <CardTitle className="text-lg">{project.title}</CardTitle>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            up.status === 'Completed'
-                              ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                              : up.status === 'In Progress'
-                                ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                : '',
+                              {up.status}
+                            </Badge>
+                          </div>
+                          {project.description && (
+                            <CardDescription className="line-clamp-2 mt-2">
+                              {project.description}
+                            </CardDescription>
                           )}
-                        >
-                          {up.status}
-                        </Badge>
-                      </div>
-                      {project.description && (
-                        <CardDescription className="line-clamp-2 mt-2">
-                          {project.description}
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent className="mt-auto pt-0">
-                      {(up.repo_url || up.demo_url) && (
-                        <div className="flex gap-4 mb-4 text-sm bg-black/20 p-3 rounded-md border border-white/5">
-                          {up.repo_url && (
-                            <a
-                              href={up.repo_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center text-muted-foreground hover:text-white transition-colors"
+                        </CardHeader>
+                        <CardContent className="mt-auto pt-0">
+                          {(up.repo_url || up.demo_url) && (
+                            <div className="flex gap-4 mb-4 text-sm bg-black/20 p-3 rounded-md border border-white/5">
+                              {up.repo_url && (
+                                <a
+                                  href={up.repo_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center text-muted-foreground hover:text-white transition-colors"
+                                >
+                                  <Github className="w-4 h-4 mr-1.5" /> Code
+                                </a>
+                              )}
+                              {up.demo_url && (
+                                <a
+                                  href={up.demo_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center text-muted-foreground hover:text-white transition-colors"
+                                >
+                                  <Play className="w-4 h-4 mr-1.5" /> Demo
+                                </a>
+                              )}
+                            </div>
+                          )}
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-8 text-red-400 hover:text-red-500 hover:bg-red-500/10"
+                              onClick={() => handleRemoveProject(up.id)}
                             >
-                              <Github className="w-4 h-4 mr-1.5" /> Code
-                            </a>
-                          )}
-                          {up.demo_url && (
-                            <a
-                              href={up.demo_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center text-muted-foreground hover:text-white transition-colors"
+                              <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
+                            </Button>
+                            <UserProjectForm
+                              initialData={up}
+                              project={project}
+                              onSubmit={(d) => handleUpdateUserProject(project.id, d)}
                             >
-                              <Play className="w-4 h-4 mr-1.5" /> Demo
-                            </a>
-                          )}
-                        </div>
-                      )}
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs h-8 text-red-400 hover:text-red-500 hover:bg-red-500/10"
-                          onClick={() => handleRemoveProject(up.id)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
-                        </Button>
-                        <UserProjectForm
-                          initialData={up}
-                          project={project}
-                          onSubmit={(d) => handleUpdateUserProject(project.id, d)}
-                        >
-                          <Button variant="secondary" size="sm" className="text-xs h-8">
-                            Update Status
-                          </Button>
-                        </UserProjectForm>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                              <Button variant="secondary" size="sm" className="text-xs h-8">
+                                Update Status
+                              </Button>
+                            </UserProjectForm>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   )
 }
