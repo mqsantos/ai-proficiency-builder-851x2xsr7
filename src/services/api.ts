@@ -148,12 +148,10 @@ export const getAllProjects = () =>
   pb.collection('projects').getFullList<Project>({ expand: 'domain_id', sort: 'created' })
 
 export const getUserProjects = (userId: string) =>
-  pb
-    .collection('user_projects')
-    .getFullList<UserProject>({
-      filter: `user_id="${userId}"`,
-      expand: 'project_id,project_id.domain_id',
-    })
+  pb.collection('user_projects').getFullList<UserProject>({
+    filter: `user_id="${userId}"`,
+    expand: 'project_id,project_id.domain_id',
+  })
 
 export const updateUserProfile = (id: string, data: Partial<User>) =>
   pb.collection('users').update<User>(id, data)
