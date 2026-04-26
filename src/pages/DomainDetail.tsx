@@ -59,9 +59,11 @@ export default function DomainDetail() {
 
   const loadResources = async (tData: Topic[]) => {
     const resMap: Record<string, Resource[]> = {}
-    await Promise.all(tData.map(async t => {
-      resMap[t.id] = await getResourcesByTopic(t.id)
-    }))
+    await Promise.all(
+      tData.map(async (t) => {
+        resMap[t.id] = await getResourcesByTopic(t.id)
+      }),
+    )
     setResources(resMap)
   }
 
@@ -101,7 +103,9 @@ export default function DomainDetail() {
       await createTopic({ ...data, domain_id: domain.id })
       toast.success('Topic created')
       loadData()
-    } catch (e) { toast.error('Failed to create topic') }
+    } catch (e) {
+      toast.error('Failed to create topic')
+    }
   }
 
   const handleUpdateTopic = async (id: string, data: any) => {
@@ -109,7 +113,9 @@ export default function DomainDetail() {
       await updateTopic(id, data)
       toast.success('Topic updated')
       loadData()
-    } catch (e) { toast.error('Failed to update topic') }
+    } catch (e) {
+      toast.error('Failed to update topic')
+    }
   }
 
   const handleDeleteTopic = async (id: string) => {
@@ -118,7 +124,9 @@ export default function DomainDetail() {
       await deleteTopic(id)
       toast.success('Topic deleted')
       loadData()
-    } catch (e) { toast.error('Failed to delete topic') }
+    } catch (e) {
+      toast.error('Failed to delete topic')
+    }
   }
 
   if (loading || !domain) return <div className="animate-pulse h-64 bg-muted rounded-xl m-8" />
@@ -140,113 +148,6 @@ export default function DomainDetail() {
       onRefreshResources={() => loadResources(topics)}
     />
   )
-    switch (status) {
-      case 'Mentor of Others':
-        return <Sparkles className="h-5 w-5 text-purple-500 animate-pulse" />
-      case 'Expert':
-        return <CheckCircle2 className="h-5 w-5" style={{ color }} />
-      case 'Familiar':
-        return <BookOpen className="h-5 w-5 text-blue-500" />
-      case 'Learning':
-        return <Clock className="h-5 w-5 text-amber-500" />
-      case 'None':
-      default:
-        return <Circle className="h-5 w-5 text-muted-foreground" />
-    }
-  }
-
-  const getStatusBadge = (status: string = 'None', color?: string) => {
-    switch (status) {
-      case 'Mentor of Others':
-        return (
-          <Badge variant="default" className="bg-purple-500 hover:bg-purple-600">
-            Mentor
-          </Badge>
-        )
-      case 'Expert':
-        return (
-          <Badge variant="default" style={{ backgroundColor: color }}>
-            Expert
-          </Badge>
-        )
-      case 'Familiar':
-        return (
-          <Badge
-            variant="secondary"
-            className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 shadow-none"
-          >
-            Familiar
-          </Badge>
-        )
-      case 'Learning':
-        return (
-          <Badge
-            variant="secondary"
-            className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 shadow-none"
-          >
-            Learning
-          </Badge>
-        )
-      case 'None':
-      default:
-        return (
-          <Badge variant="outline" className="text-muted-foreground bg-background shadow-none">
-            None
-          </Badge>
-        )
-    }
-  }
-
-  const renderTopicCard = (topic: Topic) => {
-    const status = progress[topic.id] || 'None'
-    const isHighLevel = status === 'Expert' || status === 'Mentor of Others'
-    return (
-      <div
-        key={topic.id}
-        className={cn(
-          'glass-panel p-4 rounded-xl flex items-center justify-between transition-colors',
-          isHighLevel ? 'bg-secondary/80 border-border/80' : '',
-        )}
-      >
-        <div>
-          <div className="flex items-center gap-2">
-            <h4
-              className={cn(
-                'font-medium',
-                topic.type === 'tech' && 'font-mono text-sm',
-                isHighLevel ? 'text-foreground' : 'text-foreground/90',
-              )}
-            >
-              {topic.name}
-            </h4>
-            {getStatusBadge(status, domain.color)}
-          </div>
-          <div className="flex items-center gap-3 mt-2">
-            <button
-              onClick={() => handleLearnMore(topic.name)}
-              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
-            >
-              <ExternalLink className="h-3 w-3" /> Learn More
-            </button>
-            {status === 'Mentor of Others' && (
-              <button
-                onClick={() => handleShare(topic.name)}
-                className="text-xs text-purple-500 hover:text-purple-600 flex items-center gap-1"
-              >
-                <Share2 className="h-3 w-3" /> Share Achievement
-              </button>
-            )}
-          </div>
-        </div>
-        <button
-          onClick={() => handleToggleStatus(topic.id, status)}
-          className="p-2 rounded-full hover:bg-secondary transition-colors shrink-0"
-        >
-          {getStatusIcon(status, domain.color)}
-        </button>
-      </div>
-    )
-  }
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-in">
@@ -276,7 +177,9 @@ export default function DomainDetail() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Topics</h2>
         <TopicForm onSubmit={handleCreateTopic}>
-          <Button variant="outline"><Plus className="h-4 w-4 mr-2" /> Add Topic</Button>
+          <Button variant="outline">
+            <Plus className="h-4 w-4 mr-2" /> Add Topic
+          </Button>
         </TopicForm>
       </div>
 
@@ -286,7 +189,9 @@ export default function DomainDetail() {
             <Layers className="h-5 w-5 text-muted-foreground" /> Core Skills
           </h2>
           <div className="space-y-3">{skills.map(renderTopicCard)}</div>
-          {skills.length === 0 && <p className="text-sm text-muted-foreground">No core skills added.</p>}
+          {skills.length === 0 && (
+            <p className="text-sm text-muted-foreground">No core skills added.</p>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -294,7 +199,9 @@ export default function DomainDetail() {
             <Cpu className="h-5 w-5 text-muted-foreground" /> Technologies & Tools
           </h2>
           <div className="space-y-3">{techs.map(renderTopicCard)}</div>
-          {techs.length === 0 && <p className="text-sm text-muted-foreground">No technologies added.</p>}
+          {techs.length === 0 && (
+            <p className="text-sm text-muted-foreground">No technologies added.</p>
+          )}
         </div>
       </div>
     </div>

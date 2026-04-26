@@ -99,9 +99,7 @@ export const updateResource = (id: string, data: Partial<Resource>) =>
 export const deleteResource = (id: string) => pb.collection('resources').delete(id)
 
 export const getMentors = () =>
-  pb
-    .collection('user_progress')
-    .getFullList<UserProgress>({
-      filter: 'is_available_to_mentor=true',
-      expand: 'user_id,topic_id,topic_id.domain_id',
-    })
+  pb.collection('user_progress').getFullList<UserProgress>({
+    filter: 'is_available_to_mentor=true',
+    expand: 'user_id,topic_id,topic_id.domain_id',
+  })
