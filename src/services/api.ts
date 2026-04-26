@@ -19,11 +19,24 @@ export interface Topic extends RecordModel {
   is_gap_suggestion?: boolean
 }
 
+export interface User extends RecordModel {
+  name?: string
+  avatar?: string
+  xp?: number
+  streak_count?: number
+  last_activity_at?: string
+  bio?: string
+  headline?: string
+}
+
 export interface Project extends RecordModel {
   domain_id: string
   title: string
   description?: string
   difficulty?: string
+  expand?: {
+    domain_id?: Domain
+  }
 }
 
 export interface UserProject extends RecordModel {
@@ -33,7 +46,7 @@ export interface UserProject extends RecordModel {
   repo_url?: string
   demo_url?: string
   expand?: {
-    project_id?: Project
+    project_id?: Project & { expand?: { domain_id?: Domain } }
   }
 }
 
@@ -73,10 +86,11 @@ export const getTopicsByDomain = (domainId: string) =>
 
 export const getAllTopics = () => pb.collection('topics').getFullList<Topic>({ sort: 'name' })
 
-export const getUserProgress = () =>
-  pb
-    .collection('user_progress')
-    .getFullList<UserProgress>({ expand: 'topic_id,topic_id.domain_id' })
+export const getUserProgress = (userId?: string) =>
+  pb.collection('user_progress').getFullList<UserProgress>({
+    filter: userId ? `user_id="${userId}"` : '',
+    expand: 'topic_id,topic_id.domain_id',
+  })
 
 export const upsertProgress = async (
   userId: string,
@@ -130,10 +144,22 @@ export const getProjectsByDomain = (domainId: string) =>
     .collection('projects')
     .getFullList<Project>({ filter: `domain_id="${domainId}"`, sort: 'created' })
 
+export const getAllProjects = () =>
+  pb.collection('projects').getFullList<Project>({ expand: 'domain_id', sort: 'created' })
+
 export const getUserProjects = (userId: string) =>
   pb
     .collection('user_projects')
-    .getFullList<UserProject>({ filter: `user_id="${userId}"`, expand: 'project_id' })
+    .getFullList<UserProject>({
+      filter: `user_id="${userId}"`,
+      expand: 'project_id,project_id.domain_id',
+    })
+
+export const updateUserProfile = (id: string, data: Partial<User>) =>
+  pb.collection('users').update<User>(id, data)
+
+export const deleteUserProgress = (id: string) => pb.collection('user_progress').delete(id)
+export const deleteUserProject = (id: string) => pb.collection('user_projects').delete(id)
 
 export const upsertUserProject = async (
   userId: string,

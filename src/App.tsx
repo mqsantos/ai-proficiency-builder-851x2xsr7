@@ -12,6 +12,7 @@ import DomainDetail from './pages/DomainDetail'
 import Dashboard from './pages/Dashboard'
 import ResourceLibrary from './pages/ResourceLibrary'
 import FindMentors from './pages/FindMentors'
+import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 
 const App = () => (
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route element={<Layout />}>
               <Route path="/" element={<Index />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/domain/:slug" element={<DomainDetail />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/resources" element={<ResourceLibrary />} />

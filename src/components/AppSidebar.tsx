@@ -20,6 +20,7 @@ export function AppSidebar() {
   const { user, signOut } = useAuth()
 
   const navItems = [
+    { title: 'Profile', url: '/profile', icon: User },
     { title: 'Roadmap', url: '/', icon: Network },
     { title: 'Dashboard', url: '/dashboard', icon: LineChart },
     { title: 'Resource Library', url: '/resources', icon: Library },
