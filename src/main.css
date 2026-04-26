@@ -6,16 +6,63 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%; /* Deep Midnight Blue base equivalent */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262.1 83.3% 57.8%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 262.1 83.3% 57.8%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 262.1 83.3% 57.8%;
+
+    --chart-1: 262.1 83.3% 57.8%;
+    --chart-2: 326 100% 74%;
+    --chart-3: 160 84% 39%;
+    --chart-4: 43 96% 56%;
+    --chart-5: 221 83% 53%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 40% 9%; /* Slightly lighter than background */
+    --card: 222.2 40% 9%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 262.1 83.3% 57.8%; /* Electric Purple #8b5cf6 */
+    --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -34,8 +81,6 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 262.1 83.3% 57.8%;
 
-    --radius: 0.75rem;
-
     --sidebar-background: 222.2 47% 7%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 262.1 83.3% 57.8%;
@@ -44,16 +89,6 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 262.1 83.3% 57.8%;
-
-    --chart-1: 262.1 83.3% 57.8%;
-    --chart-2: 326 100% 74%;
-    --chart-3: 160 84% 39%;
-    --chart-4: 43 96% 56%;
-    --chart-5: 221 83% 53%;
-  }
-
-  .dark {
-    /* Kept same as root since we enforce dark mode theme colors globally */
   }
 
   * {
@@ -61,7 +96,6 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    background-color: #020617; /* Hardcode the deep midnight blue */
     background-image:
       radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.05), transparent 25%),
       radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.05), transparent 25%);
@@ -80,7 +114,7 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-slate-900/60 backdrop-blur-md border border-white/10;
+    @apply bg-card/60 backdrop-blur-md border border-border/50;
   }
 
   .glow-hover {

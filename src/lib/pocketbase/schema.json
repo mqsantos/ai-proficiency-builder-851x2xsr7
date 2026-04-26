@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-26T13:34:12.760Z",
+  "generatedAt": "2026-04-26T13:42:34.620Z",
   "collections": [
     {
       "name": "users",
@@ -37,6 +37,24 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "xp",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "streak_count",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "last_activity_at",
+          "type": "date",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [

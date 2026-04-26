@@ -67,15 +67,15 @@ export default function Dashboard() {
     <div className="mx-auto max-w-6xl space-y-8 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">My Progress</h1>
-          <p className="text-slate-400 mt-1">Track your AI mastery journey.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">My Progress</h1>
+          <p className="text-muted-foreground mt-1">Track your AI mastery journey.</p>
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="glass-panel col-span-1 md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" /> Proficiency Radar
             </CardTitle>
             <CardDescription>Your mastery distribution across AI domains</CardDescription>
@@ -87,10 +87,10 @@ export default function Dashboard() {
                 className="h-full w-full"
               >
                 <RadarChart data={chartData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-                  <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                  <PolarGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.2} />
                   <PolarAngleAxis
                     dataKey="domain"
-                    tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+                    tick={{ fill: 'hsl(var(--foreground))', fillOpacity: 0.7, fontSize: 12 }}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Radar
@@ -109,22 +109,24 @@ export default function Dashboard() {
         <div className="space-y-6">
           <Card className="glass-panel border-primary/20 bg-primary/5">
             <CardContent className="p-6 flex flex-col items-center justify-center text-center h-[160px]">
-              <Trophy className="h-10 w-10 text-amber-400 mb-3" />
-              <div className="text-4xl font-black text-white">{totalMastered}</div>
-              <p className="text-sm text-slate-400 mt-1 font-medium">Total Skills Mastered</p>
+              <Trophy className="h-10 w-10 text-amber-500 mb-3" />
+              <div className="text-4xl font-black text-foreground">{totalMastered}</div>
+              <p className="text-sm text-muted-foreground mt-1 font-medium">
+                Total Skills Mastered
+              </p>
             </CardContent>
           </Card>
 
           <Card className="glass-panel flex-1">
             <CardHeader className="pb-3">
-              <CardTitle className="text-white text-lg flex items-center gap-2">
-                <Zap className="h-4 w-4 text-emerald-400" /> Recent Achievements
+              <CardTitle className="text-foreground text-lg flex items-center gap-2">
+                <Zap className="h-4 w-4 text-emerald-500" /> Recent Achievements
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {recentMastered.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-4">
+                  <p className="text-sm text-muted-foreground text-center py-4">
                     No skills mastered yet. Time to start learning!
                   </p>
                 ) : (
@@ -135,8 +137,8 @@ export default function Dashboard() {
                         style={{ backgroundColor: item.domain?.color || '#fff' }}
                       />
                       <div>
-                        <p className="text-sm font-medium text-slate-200">{item.topic?.name}</p>
-                        <p className="text-xs text-slate-500">{item.domain?.name}</p>
+                        <p className="text-sm font-medium text-foreground">{item.topic?.name}</p>
+                        <p className="text-xs text-muted-foreground">{item.domain?.name}</p>
                       </div>
                     </div>
                   ))
