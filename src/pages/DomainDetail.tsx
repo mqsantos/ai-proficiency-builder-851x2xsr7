@@ -43,6 +43,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { toast } from 'sonner'
 import { TopicItem } from '@/components/TopicItem'
 import { TopicForm } from '@/components/forms/TopicForm'
+import { DomainForm } from '@/components/forms/DomainForm'
 
 export default function DomainDetail() {
   const { slug } = useParams<{ slug: string }>()
